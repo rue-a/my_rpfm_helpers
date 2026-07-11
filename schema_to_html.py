@@ -268,7 +268,7 @@ def render_table_section(table_name: str, defs: list) -> str:
     return f"""
 <section class="table-section" id="{e(table_name)}" data-name="{e(table_name)}">
   <div class="table-header">
-    <span class="table-name">{e(table_name)}</span>
+    <a class="table-name" data-goto="{e(table_name)}" href="?q={e(table_name)}">{e(table_name)}</a>
     <span class="table-meta">{e(version_note)} &middot; {len(all_fields)} columns</span>
   </div>
   <table class="fields">

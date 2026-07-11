@@ -49,6 +49,7 @@ function applyFilters() {
   btnAll.classList.toggle('visible', pinnedTable !== null);
   btnAll.textContent = pinnedTable ? `\u00d7 ${pinnedTable}` : '';
   countEl.textContent = `${visible} / ${sections.length} tables`;
+  applyHighlights(q);
 }
 
 // Sidebar link: click to pin, click again to unpin
@@ -87,7 +88,7 @@ function gotoTable(name) {
 
 // Reference link clicks (delegated)
 document.addEventListener('click', ev => {
-  const a = ev.target.closest('a.ref-link[data-goto]');
+  const a = ev.target.closest('a.ref-link[data-goto], a.table-name[data-goto]');
   if (!a) return;
   ev.preventDefault();
   gotoTable(a.dataset.goto);
@@ -107,17 +108,52 @@ document.addEventListener('click', ev => {
   }
 });
 
-// Sidebar scroll-spy (only when not pinned)
+// Sidebar scroll-spy: only tracks visibility for other purposes; active class
+// is managed solely by applyFilters (only set when a table is pinned).
 const observer = new IntersectionObserver(entries => {
-  if (pinnedTable) return;
   entries.forEach(e => {
-    if (e.isIntersecting) {
-      const id = e.target.id;
-      links.forEach(a => a.classList.toggle('active', a.dataset.name === id));
-    }
+    e.target.dataset.visible = e.isIntersecting ? '1' : '';
   });
 }, { threshold: 0.1 });
 sections.forEach(s => observer.observe(s));
+
+// -----------------------------------------------------------------------
+// Text highlighting
+// -----------------------------------------------------------------------
+function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function highlightNode(node, re) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent;
+    if (!re.test(text)) { re.lastIndex = 0; return; }
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const mark = document.createElement('mark');
+      mark.textContent = m[0];
+      frag.appendChild(mark);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'MARK') {
+    [...node.childNodes].forEach(child => highlightNode(child, re));
+  }
+}
+
+function applyHighlights(q) {
+  document.querySelectorAll('tr.field-row:not(.hidden-row) mark').forEach(mark => {
+    mark.replaceWith(...mark.childNodes);
+  });
+  document.querySelectorAll('tr.field-row:not(.hidden-row) td').forEach(td => td.normalize());
+  if (!q) return;
+  const re = new RegExp(escapeRe(q), 'gi');
+  document.querySelectorAll('tr.field-row:not(.hidden-row) td').forEach(td => {
+    highlightNode(td, re);
+  });
+}
 
 mainSearch.addEventListener('input', applyFilters);
 sideSearch.addEventListener('input', applyFilters);
@@ -164,3 +200,31 @@ const topbarEl = document.getElementById('topbar');
 new ResizeObserver(() => {
   document.documentElement.style.setProperty('--topbar-h', topbarEl.offsetHeight + 'px');
 }).observe(topbarEl);
+
+// Resizable sidebar
+const resizer = document.createElement('div');
+resizer.id = 'resizer';
+document.body.appendChild(resizer);
+
+resizer.addEventListener('mousedown', ev => {
+  ev.preventDefault();
+  const startX = ev.clientX;
+  const startW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  resizer.classList.add('dragging');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+
+  function onMove(e) {
+    const w = Math.max(150, Math.min(600, startW + e.clientX - startX));
+    document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+  }
+  function onUp() {
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+});
