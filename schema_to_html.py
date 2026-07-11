@@ -7,7 +7,7 @@ Usage:
 
 Defaults:
     schema.ron  → ../rpfm-schemas/schema_wh3.ron
-    output.html → schema_wh3_lookup.html
+    output.html → docs.html
 """
 
 import re
@@ -338,7 +338,7 @@ def generate_html(schema: dict) -> str:
 def main():
     here = Path(__file__).parent
     default_schema = here.parent / "rpfm-schemas" / "schema_wh3.ron"
-    default_out    = here / "schema_wh3_lookup"
+    default_out    = here / "docs"
 
     schema_path = Path(sys.argv[1]) if len(sys.argv) > 1 else default_schema
     out_dir     = Path(sys.argv[2]) if len(sys.argv) > 2 else default_out
