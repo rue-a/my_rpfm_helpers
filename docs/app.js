@@ -206,25 +206,39 @@ const resizer = document.createElement('div');
 resizer.id = 'resizer';
 document.body.appendChild(resizer);
 
-resizer.addEventListener('mousedown', ev => {
+resizer.addEventListener('pointerdown', ev => {
   ev.preventDefault();
+  resizer.setPointerCapture(ev.pointerId);
   const startX = ev.clientX;
   const startW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  const sidebarEl = document.getElementById('sidebar');
   resizer.classList.add('dragging');
-  document.body.style.cursor = 'col-resize';
   document.body.style.userSelect = 'none';
 
+  let rafPending = false;
+  let currentW = startW;
+
   function onMove(e) {
-    const w = Math.max(150, Math.min(600, startW + e.clientX - startX));
-    document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+    currentW = Math.max(150, Math.min(600, startW + e.clientX - startX));
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      // Only touch fixed-position elements — avoids reflowing #main entirely
+      sidebarEl.style.width = currentW + 'px';
+      resizer.style.left = (currentW - 3) + 'px';
+      rafPending = false;
+    });
   }
   function onUp() {
+    // Commit once: updates #main margin-left and resizer via CSS var
+    document.documentElement.style.setProperty('--sidebar-w', currentW + 'px');
+    sidebarEl.style.width = '';
+    resizer.style.left = '';
     resizer.classList.remove('dragging');
-    document.body.style.cursor = '';
     document.body.style.userSelect = '';
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
+    resizer.removeEventListener('pointermove', onMove);
+    resizer.removeEventListener('pointerup', onUp);
   }
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup', onUp);
+  resizer.addEventListener('pointermove', onMove);
+  resizer.addEventListener('pointerup', onUp);
 });
