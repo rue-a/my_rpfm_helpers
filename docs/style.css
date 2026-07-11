@@ -3,6 +3,7 @@
   --surface: #e1e1e1;
   --border: #373a40;
   --accent: #3293e2;
+  --accent-bg: rgba(19, 122, 206, 0.12);
   --accent2: #55c4a3;
   --text: #3f3f3f;
   --text-dim: #868e96;
@@ -103,8 +104,9 @@ body {
 }
 
 #table-list a.active {
-  color: var(--accent);
-  border-left-color: var(--accent);
+  color: var(--key-fg);
+  border-left-color: var(--key-fg);
+  background: var(--key-bg);
 }
 
 /* Top bar */
