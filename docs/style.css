@@ -282,6 +282,23 @@ table.fields tr.hidden-row {
   max-width: 600px;
 }
 
+.col-note {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-style: italic;
+  max-width: 600px;
+  margin-top: 0.2rem;
+}
+
+.col-note code {
+  font-style: normal;
+  font-size: 0.8rem;
+  background: var(--surface);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
 .col-enum {
   font-size: 0.72rem;
   color: var(--text-dim);

@@ -15,6 +15,22 @@ import sys
 import html as html_module
 from pathlib import Path
 
+try:
+    import yaml as _yaml
+    def _load_yaml(path: Path) -> dict:
+        with path.open(encoding="utf-8") as f:
+            return _yaml.safe_load(f) or {}
+except ImportError:
+    def _load_yaml(path: Path) -> dict:  # type: ignore[misc]
+        raise SystemExit("PyYAML is required for notes.yaml support: pip install pyyaml")
+
+
+def load_notes(path: Path) -> dict:
+    """Load optional table/column notes from a YAML file."""
+    if not path.exists():
+        return {}
+    return _load_yaml(path)
+
 
 # ---------------------------------------------------------------------------
 # RON parser
@@ -212,7 +228,19 @@ def e(s: str) -> str:
     return html_module.escape(str(s))
 
 
-def render_field_row(field: dict) -> str:
+def render_note(text: str) -> str:
+    """HTML-escape note text, rendering `backtick` spans as <code>."""
+    parts = re.split(r'`([^`]+)`', text)
+    out = []
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            out.append(e(part))
+        else:
+            out.append(f'<code>{e(part)}</code>')
+    return "".join(out)
+
+
+def render_field_row(field: dict, note: str = "") -> str:
     name = field.get("name", "?")
     ft   = field_type_str(field.get("field_type", ""))
     is_key = field.get("is_key", False)
@@ -242,11 +270,12 @@ def render_field_row(field: dict) -> str:
     default_cell = f'<span class="col-default">{e(default)}</span>' if default is not None else ""
     enum_cell = f'<div class="col-enum">{e(ev)}</div>' if ev else ""
     desc_cell = f'<span class="col-desc">{e(desc)}</span>' if desc else ""
+    note_cell = f'<span class="col-note">{render_note(note)}</span>' if note else ""
 
     return (
         f'<tr class="field-row" {key_attr} data-search="{e(search_blob)}">'
         f'<td class="col-name">{key_badge}<code>{e(name)}</code></td>'
-        f'<td>{desc_cell}{enum_cell}</td>'
+        f'<td>{desc_cell}{note_cell}{enum_cell}</td>'
         f'<td>{ref_cell}</td>'
         f'<td>{default_cell}</td>'
         f'<td><span class="tag-type">{e(ft)}</span></td>'
@@ -254,14 +283,15 @@ def render_field_row(field: dict) -> str:
     )
 
 
-def render_table_section(table_name: str, defs: list) -> str:
+def render_table_section(table_name: str, defs: list, notes: dict | None = None) -> str:
     latest = get_latest_definition(defs)
     version = latest.get("version", 0)
     fields = latest.get("fields", [])
     loc_fields = latest.get("localised_fields", [])
     all_fields = fields + loc_fields
+    table_notes = (notes or {}).get(table_name, {})
 
-    rows = "\n".join(render_field_row(f) for f in all_fields)
+    rows = "\n".join(render_field_row(f, table_notes.get(f.get("name", ""), "")) for f in all_fields)
     n_versions = len(defs)
     version_note = f"v{version}" + (f" ({n_versions} versions)" if n_versions > 1 else "")
 
@@ -282,7 +312,7 @@ def render_table_section(table_name: str, defs: list) -> str:
 </section>"""
 
 
-def generate_html(schema: dict) -> str:
+def generate_html(schema: dict, notes: dict | None = None) -> str:
     definitions: dict = schema.get("definitions", {})
     table_names = sorted(definitions.keys())
 
@@ -291,7 +321,7 @@ def generate_html(schema: dict) -> str:
         for n in table_names
     )
     sections = "\n".join(
-        render_table_section(n, definitions[n]) for n in table_names
+        render_table_section(n, definitions[n], notes) for n in table_names
     )
 
     return f"""<!DOCTYPE html>
@@ -349,10 +379,15 @@ def main():
     print("Parsing RON \u2026", flush=True)
     schema = parse_ron(text)
 
+    notes_path = here / "notes.yaml"
+    notes = load_notes(notes_path)
+    if notes:
+        print(f"Loaded notes from {notes_path}", flush=True)
+
     print("Generating files \u2026", flush=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    (out_dir / "index.html").write_text(generate_html(schema), encoding="utf-8")
+    (out_dir / "index.html").write_text(generate_html(schema, notes), encoding="utf-8")
 
     definitions = schema.get("definitions", {})
     print(f"Written {out_dir}/index.html  ({len(definitions)} tables)")
