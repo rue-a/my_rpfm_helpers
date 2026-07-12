@@ -8,5 +8,5 @@
 battle_entities_tables:
   fire_arc_close: "Defines the unit's firing arc visualization. Does not effect the actual firing arc. Might need to be defined on a `articulated_entity`."
 land_units_tables:
-  primary_ammo: "Ammunition Amount"
+  primary_ammo: "Ammunition amount"
   secondary_ammo: "???"
