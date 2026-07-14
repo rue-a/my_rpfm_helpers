@@ -10,3 +10,7 @@ battle_entities_tables:
 land_units_tables:
   primary_ammo: "Ammunition amount"
   secondary_ammo: "???"
+  primary_missile_weapon: "This does not actually change the weapon ingame. I think it just pulls the weapon stats for the UI. To change the weapon, one has to update the `battle_entity_stats` column in `battle_personalities_tables`."
+  primary_melee_weapon: "This does not actually change the weapon ingame. I think it just pulls the weapon stats for the UI. To change the weapon, one has to update the `battle_entity_stats` column in `battle_personalities_tables`."
+battle_personalities_tables:
+  battle_entity_stats: "Defines the which weapons the entities use in battle (via `battle_entity_stats_tables`)."
