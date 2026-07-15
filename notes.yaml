@@ -17,3 +17,5 @@ main_units_tables:
   num_men: "Has to be adjusted to `num_engines` in `land_units_tables`. I don't know where the required number of men per engine is defined."
 battle_personalities_tables:
   battle_entity_stats: "Defines the which weapons the entities use in battle (via `battle_entity_stats_tables`)."
+projectiles_tables:
+  contact_stat_effect: "To control the icon that appears beside the ranged attack in the unit stats (like with poison arrows), you need to add a PNG with the reference special ability phase's name in `ui/battle ui/ability_icons`. "
