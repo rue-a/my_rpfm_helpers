@@ -334,6 +334,7 @@ def render_table_section(
     loc_fields = latest.get("localised_fields", [])
     all_fields = fields + loc_fields
     table_notes = (notes or {}).get(table_name, {})
+    table_note = table_notes.get("_note", "")
     back_ref_html = render_back_refs((back_refs or {}).get(table_name, []))
 
     rows = "\n".join(
@@ -351,6 +352,7 @@ def render_table_section(
     <span class="table-meta">{e(version_note)} &middot; {len(all_fields)} columns</span>
   </div>
   {back_ref_html}
+  {f'<div class="table-note">{render_note(table_note)}</div>' if table_note else ""}
   <table class="fields">
     <thead>
       <tr>
