@@ -216,6 +216,27 @@ body {
   color: var(--text-dim);
 }
 
+.back-refs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.back-refs-label {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  margin-right: 0.2rem;
+}
+
+.back-ref-col {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
 table.fields {
   width: 100%;
   border-collapse: collapse;
@@ -310,6 +331,8 @@ table.fields tr.hidden-row {
   font-style: italic;
 }
 
+
+
 mark {
   background: var(--accent-bg);
   color: inherit;
@@ -355,12 +378,16 @@ table.fields tr.field-row.selected td {
 a.ref-link {
   color: var(--ref-fg);
   text-decoration: none;
-  border-bottom: 1px dotted var(--ref-fg);
+  /* border-bottom: 1px dotted var(--ref-fg); */
 }
 
 a.ref-link:hover {
   color: var(--accent2);
   border-bottom-color: var(--accent2);
+}
+
+.back-refs-label {
+  font-weight: bold;
 }
 
 /* Scrollbar */
