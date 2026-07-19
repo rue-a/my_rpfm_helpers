@@ -27,5 +27,8 @@ unit_spacing_tables:
   _note: "The different formations can be attached to a unit via `unit_special_ability_tables [formation]`. Not all formation keys are working. I think only testudo and shield wall. "
 unit_special_abilities_tables:
   _note: "This table and `unit_abilities_tables` share the same key!"
+  num_effected_friendly_units: "This seems to be only relevant for AOE effects. An ability that target the caster and an other unit, works, even if this is set to `1`."
 unit_abilities_tables:
   _note: "This table and `unit_special_abilities_tables` share the same key!"
+special_ability_phases_tables:
+  "imbue_ignition": "The original DB entries use `10` if true and `0` if false."
