@@ -351,8 +351,9 @@ def render_table_section(
     <a class="table-name" data-goto="{e(table_name)}" href="?q={e(table_name)}">{e(table_name)}</a>
     <span class="table-meta">{e(version_note)} &middot; {len(all_fields)} columns</span>
   </div>
-  {back_ref_html}
   {f'<div class="table-note">{render_note(table_note)}</div>' if table_note else ""}
+  {back_ref_html}
+  
   <table class="fields">
     <thead>
       <tr>

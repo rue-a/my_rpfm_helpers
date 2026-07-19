@@ -26,6 +26,6 @@ culture_to_battle_animation_tables_tables:
 unit_spacing_tables:
   _note: "The different formations can be attached to a unit via `unit_special_ability_tables [formation]`. Not all formation keys are working. I think only testudo and shield wall. "
 unit_special_abilities_tables:
-  _note: "this table and `unit_abilities_tables` share the same key!"
+  _note: "This table and `unit_abilities_tables` share the same key!"
 unit_abilities_tables:
-  _note: "this table and `unit_special_abilities_tables` share the same key!"
+  _note: "This table and `unit_special_abilities_tables` share the same key!"
