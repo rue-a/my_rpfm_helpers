@@ -1,5 +1,6 @@
 # %%
 import re
+import shutil
 from io import StringIO
 from pathlib import Path
 
@@ -30,10 +31,18 @@ reference_tables = [
 
 
 lua_template_path = here / "template_units_nanu_rors.lua"
-lua_out_path = here / f"{MY_MOD_UNITS_PREFIX}_nanu_rors.lua"
 
 ror_table_name = f"{MY_MOD_UNITS_PREFIX}_nanu_rors"
-out_dir = here / nanu_effects_table_name
+out_dir = here / "out"
+lua_out_path = (
+    out_dir / "script" / "campaign" / "mod" / f"{MY_MOD_UNITS_PREFIX}_nanu_rors.lua"
+)
+effects_out_dir = out_dir / "db" / nanu_effects_table_name
+
+# Clear the output directory before every run
+if out_dir.exists():
+    shutil.rmtree(out_dir)
+out_dir.mkdir(parents=True)
 
 
 # -------------------------------------------------------------------------
@@ -110,6 +119,14 @@ unit_keywords_lua = "\n".join(kw_lines)
 with open(lua_template_path, "r", encoding="utf-8") as f:
     lua_script = f.read()
 
+# Replace mod_name so it matches the generated script's name
+lua_script = re.sub(
+    r'local mod_name\s*=\s*"[^"]*"',
+    f'local mod_name = "{ror_table_name}"',
+    lua_script,
+    count=1,
+)
+
 # Replace the Unit_Keywords block content
 lua_script = re.sub(
     r"(local Unit_Keywords\s*=\s*\{)[^}]*(})",
@@ -119,14 +136,15 @@ lua_script = re.sub(
     flags=re.DOTALL,
 )
 
+lua_out_path.parent.mkdir(parents=True, exist_ok=True)
 with open(lua_out_path, "w", encoding="utf-8") as f:
     f.write(lua_script)
 
 print(f"Wrote lua script with {len(new_unit_keywords)} unit keyword entries.")
 
 
-out_dir.mkdir(exist_ok=True)
-out_path = out_dir / f"{ror_table_name}.tsv"
+effects_out_dir.mkdir(parents=True, exist_ok=True)
+out_path = effects_out_dir / f"{ror_table_name}.tsv"
 header = f"#unit_purchasable_effect_sets_tables;0;db/unit_purchasable_effect_sets_tables/{ror_table_name}"
 print(header)
 write_tw_tsv(ror_df, out_path, header_line=header)

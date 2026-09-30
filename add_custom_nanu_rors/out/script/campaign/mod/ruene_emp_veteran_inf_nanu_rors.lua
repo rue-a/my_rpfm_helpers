@@ -12,7 +12,7 @@
 ----------------------------------------------------------------------------------------------------
 
 --replace this with the custom name you renamed this script to
-local mod_name = "template_units_nanu_rors"
+local mod_name = "ruene_emp_veteran_inf_nanu_rors"
 
 ---------------------------------------- GLOBAL VARIABLES ------------------------------------------
 ---     These global variables are used by the main mod. Leave them alone and do not            ----
