@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-
+MY_MOD_NAME = "rue_veteran_state_troops"
 MY_MOD_UNITS_PREFIX = "ruene_emp_veteran_inf"
 NANU_MOD_PATH = "/home/rue/WH3-Mods/Mods/!LOOKUP/!!_nanu_dynamic_rors"
 
@@ -32,8 +32,8 @@ reference_tables = [
 
 lua_template_path = here / "template_units_nanu_rors.lua"
 
-ror_table_name = f"{MY_MOD_UNITS_PREFIX}_nanu_rors"
-out_dir = here / "out"
+ror_table_name = f"{MY_MOD_NAME}_nanu_rors"
+out_dir = here / f"{MY_MOD_NAME}_nanu_rors_submod"
 lua_out_path = (
     out_dir / "script" / "campaign" / "mod" / f"{MY_MOD_UNITS_PREFIX}_nanu_rors.lua"
 )
@@ -43,6 +43,11 @@ effects_out_dir = out_dir / "db" / nanu_effects_table_name
 if out_dir.exists():
     shutil.rmtree(out_dir)
 out_dir.mkdir(parents=True)
+
+# Copy static template files into the submod root, stripping the "template_" prefix
+for template_file in here.glob("template_*.rpfm_reserved.*"):
+    dest_name = template_file.name.removeprefix("template_")
+    shutil.copy(template_file, out_dir / dest_name)
 
 
 # -------------------------------------------------------------------------
