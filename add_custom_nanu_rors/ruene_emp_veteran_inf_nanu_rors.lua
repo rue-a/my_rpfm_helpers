@@ -45,10 +45,9 @@ local Effect_List = {};
 ----------------------------------------------------------------------------------------------------
 
 local Unit_Keywords = {
-    ["ruene_kislev_techs_ksl_war_wagon_rifle_main_unit"] = {"empire_culture", "handgun", "powder_unit", "rifle"},
-    ["ruene_kislev_techs_ksl_war_wagon_mortar_main_unit"] = {"empire_culture", "powder_unit", "artillery", "mortar"},
-    ["ruene_calm_erengrad_cannon_main_unit"] = {"dwarf_culture", "powder_unit"},
-    ["ruene_calm_urugan_cannon_main_unit"] = {"dwarf_culture", "powder_unit"},
+    ["ruene_emp_veteran_inf_halberdiers"] = {"empire_culture", "halberd_unit", "anti_large"},
+    ["ruene_emp_veteran_inf_swordsmen"] = {"empire_culture", "shield_unit", "sword_unit"},
+    ["ruene_emp_veteran_inf_spearmen"] = {"empire_culture", "anti_large", "shield_unit"},
 
 };
 

@@ -1,10 +1,47 @@
 # %%
-import os
-from pathlib import Path
-import pandas as pd
+import re
 from io import StringIO
+from pathlib import Path
 
-HERE = Path(__file__).parent
+import pandas as pd
+
+
+MY_MOD_UNITS_PREFIX = "ruene_emp_veteran_inf"
+NANU_MOD_PATH = "/home/rue/WH3-Mods/Mods/!LOOKUP/!!_nanu_dynamic_rors"
+
+
+REFERENCE_TABLE_NAMES = ["nanu_dynamic_rors_emp.tsv", "nanu_dynamic_rors_dwf.tsv"]
+
+# Define which base game units serve as template for your new custom units
+UNIT_TEMPLATES = {
+    f"{MY_MOD_UNITS_PREFIX}_halberdiers": "wh_main_emp_inf_halberdiers",
+    f"{MY_MOD_UNITS_PREFIX}_swordsmen": "wh_main_emp_inf_swordsmen",
+    f"{MY_MOD_UNITS_PREFIX}_spearmen": "wh_main_emp_inf_spearmen_1",
+}
+# --- Constants ---------------------------------------------------------
+here = Path(__file__).parent
+
+nanu_effects_table_name = "unit_purchasable_effect_sets_tables"
+nanu_mod_reference_tables_path = Path(f"{NANU_MOD_PATH}/db/{nanu_effects_table_name}")
+nanu_lua_path = Path(f"{NANU_MOD_PATH}/script/campaign/mod/nanu_dynamic_ror_data.lua")
+reference_tables = [
+    nanu_mod_reference_tables_path / name for name in REFERENCE_TABLE_NAMES
+]
+
+
+lua_template_path = here / "template_units_nanu_rors.lua"
+lua_out_path = here / f"{MY_MOD_UNITS_PREFIX}_nanu_rors.lua"
+
+ror_table_name = f"{MY_MOD_UNITS_PREFIX}_nanu_rors"
+out_dir = here / nanu_effects_table_name
+
+
+# -------------------------------------------------------------------------
+
+
+# --- Constants ---------------------------------------------------------
+
+# -------------------------------------------------------------------------
 
 
 def read_tw_tsvs(paths):
@@ -31,34 +68,19 @@ def write_tw_tsv(df, filename, header_line=None):
             f.writelines(content)
 
 
-nanu_mod_path = "/home/rue/WH3-Mods/Mods/!LOOKUP/!!_nanu_dynamic_rors/db/unit_purchasable_effect_sets_tables"
-reference_tables = ["nanu_dynamic_rors_emp.tsv", "nanu_dynamic_rors_dwf.tsv"]
-reference_tables = [f"{nanu_mod_path}/{ref}" for ref in reference_tables]
-
 reference_df = read_tw_tsvs(reference_tables)
 
 
 ror_df = pd.DataFrame(columns=reference_df.columns)
-# Step 1: Define which units serve as tempalte (main units)
-unit_templates = {
-    "ruene_kislev_techs_ksl_war_wagon_rifle_main_unit": "wh2_dlc13_emp_veh_war_wagon_0",
-    "ruene_kislev_techs_ksl_war_wagon_mortar_main_unit": "wh2_dlc13_emp_veh_war_wagon_1",
-    "ruene_calm_erengrad_cannon_main_unit": "wh_main_dwf_art_cannon",
-    "ruene_calm_urugan_cannon_main_unit": "wh_main_dwf_art_organ_gun",
-}
-
-# Step 2: For each template unit, copy matching rows and remap unit name to the new key
-template_values = list(unit_templates.values())
+# Step 1: For each template unit, copy matching rows and remap unit name to the new key
+template_values = list(UNIT_TEMPLATES.values())
 matched = reference_df[reference_df["unit"].isin(template_values)].copy()
-value_to_key = {v: k for k, v in unit_templates.items()}
+value_to_key = {v: k for k, v in UNIT_TEMPLATES.items()}
 matched["unit"] = matched["unit"].map(value_to_key)
 ror_df = pd.concat([ror_df, matched], ignore_index=True)
 
 
-# Step 3: Parse nanu lua data file for keywords of each template unit, then emit lua script
-import re
-
-nanu_lua_path = "/home/rue/WH3-Mods/Mods/!LOOKUP/!!_nanu_dynamic_rors/script/campaign/mod/nanu_dynamic_ror_data.lua"
+# Step 2: Parse nanu lua data file for keywords of each template unit, then emit lua script
 with open(nanu_lua_path, "r", encoding="utf-8") as f:
     lua_content = f.read()
 
@@ -72,7 +94,7 @@ for m in lua_unit_kw_pattern.finditer(lua_content):
 
 # Build Unit_Keywords for our new units using the template unit's keywords
 new_unit_keywords: dict[str, list[str]] = {}
-for new_unit, template_unit in unit_templates.items():
+for new_unit, template_unit in UNIT_TEMPLATES.items():
     if template_unit in lua_keywords:
         new_unit_keywords[new_unit] = lua_keywords[template_unit]
     else:
@@ -85,7 +107,6 @@ for unit, kws in new_unit_keywords.items():
     kw_lines.append(f'    ["{unit}"] = {{{kw_str}}},')
 unit_keywords_lua = "\n".join(kw_lines)
 
-lua_template_path = HERE / "template_units_nanu_rors.lua"
 with open(lua_template_path, "r", encoding="utf-8") as f:
     lua_script = f.read()
 
@@ -98,15 +119,12 @@ lua_script = re.sub(
     flags=re.DOTALL,
 )
 
-lua_out_path = HERE / "custom_units_nanu_rors.lua"
 with open(lua_out_path, "w", encoding="utf-8") as f:
     f.write(lua_script)
 
 print(f"Wrote lua script with {len(new_unit_keywords)} unit keyword entries.")
 
 
-ror_table_name = "ruene_kislev_merc_techs_nanu_dynamic_rors"
-out_dir = HERE / "unit_purchasable_effect_sets_tables"
 out_dir.mkdir(exist_ok=True)
 out_path = out_dir / f"{ror_table_name}.tsv"
 header = f"#unit_purchasable_effect_sets_tables;0;db/unit_purchasable_effect_sets_tables/{ror_table_name}"
